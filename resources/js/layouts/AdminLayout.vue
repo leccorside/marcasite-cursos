@@ -6,7 +6,7 @@
     <!-- Main Content -->
     <div :class="[
       'transition-all duration-300 min-h-screen',
-      sidebarOpen ? 'ml-64 lg:ml-64' : 'ml-0'
+      sidebarOpen ? 'ml-0 lg:ml-64' : 'ml-0'
     ]">
       <!-- Header -->
       <Header @toggle-sidebar="sidebarOpen = !sidebarOpen" />
@@ -27,9 +27,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Sidebar from '@/components/admin/Sidebar.vue';
 import Header from '@/components/admin/Header.vue';
 
-const sidebarOpen = ref(true);
+// No mobile, começa fechado. No desktop (lg), começa aberto
+const sidebarOpen = ref(window.innerWidth >= 1024);
+
+// Atualizar estado baseado no tamanho da tela
+const handleResize = () => {
+  if (window.innerWidth >= 1024) {
+    sidebarOpen.value = true;
+  } else {
+    sidebarOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+  handleResize(); // Chamar uma vez para definir o estado inicial
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 </script>

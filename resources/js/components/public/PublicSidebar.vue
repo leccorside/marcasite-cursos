@@ -3,7 +3,8 @@
     :class="[
       'fixed left-0 top-0 h-full bg-gray-200 z-50 transition-transform duration-300',
       isOpen ? 'translate-x-0' : '-translate-x-full',
-      'w-64 lg:translate-x-0'
+      'w-64',
+      'lg:translate-x-0'
     ]"
   >
     <div class="h-full flex flex-col">
@@ -11,8 +12,9 @@
       <div class="p-4 flex items-center justify-between border-b border-gray-300">
         <div class="flex items-center gap-2">
           <button 
-            @click="$emit('close')"
-            class="text-gray-600 hover:text-gray-900"
+            @click="emit('close')"
+            class="text-gray-600 hover:text-gray-900 lg:hidden"
+            aria-label="Fechar menu"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -34,6 +36,7 @@
               ? 'bg-gray-300 text-gray-900' 
               : 'text-gray-700 hover:bg-gray-250'
           ]"
+          @click="handleMenuClick"
         >
           <!-- Dashboard Icon -->
           <svg v-if="item.icon === 'dashboard'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +63,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 defineProps({
@@ -69,8 +71,6 @@ defineProps({
     default: true
   }
 });
-
-defineEmits(['close']);
 
 const route = useRoute();
 
@@ -99,5 +99,16 @@ const menuItems = [
 
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/');
+};
+
+// Emit para fechar o menu
+const emit = defineEmits(['close']);
+
+// Fechar menu no mobile ao clicar em um link
+const handleMenuClick = () => {
+  // Fecha o menu apenas em telas mobile (menores que lg)
+  if (window.innerWidth < 1024) {
+    emit('close');
+  }
 };
 </script>

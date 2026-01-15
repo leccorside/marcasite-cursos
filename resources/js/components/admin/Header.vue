@@ -1,6 +1,22 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
     <div class="px-6 py-4 flex items-center justify-between">
+      <!-- Left: Hamburger Menu (Mobile) -->
+      <button
+        @click="$emit('toggle-sidebar')"
+        class="lg:hidden text-gray-600 hover:text-gray-900 mr-4"
+        aria-label="Toggle menu"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
       <!-- Left: Search -->
       <div class="flex-1 max-w-md">
         <div class="relative">
