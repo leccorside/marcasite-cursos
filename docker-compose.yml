@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marcasite_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - marcasite-network
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    container_name: marcasite_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - marcasite-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: marcasite_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: marcasite_cursos
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: marcasite
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3306:3306"
+    networks:
+      - marcasite-network
+
+  node:
+    image: node:18-alpine
+    container_name: marcasite_node
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - marcasite-network
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - app
+
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  marcasite-network:
+    driver: bridge
