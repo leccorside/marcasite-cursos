@@ -12,7 +12,7 @@
       <Header @toggle-sidebar="sidebarOpen = !sidebarOpen" />
       
       <!-- Page Content -->
-      <main class="p-6">
+      <main class="p-1">
         <router-view />
       </main>
     </div>

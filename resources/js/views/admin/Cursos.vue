@@ -56,21 +56,21 @@
           <!-- Botões Exportar -->
           <button
             @click="exportarExcel"
-            class="bg-green-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+            class="bg-green-600 text-white px-3 md:px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Exportar Excel
+            <span class="hidden md:inline">Exportar Excel</span>
           </button>
           <button
             @click="exportarPdf"
-            class="bg-red-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-red-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+            class="bg-red-600 text-white px-3 md:px-6 py-2.5 rounded-lg font-bold hover:bg-red-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            Exportar PDF
+            <span class="hidden md:inline">Exportar PDF</span>
           </button>
           
           <!-- Botão Novo -->
@@ -289,10 +289,16 @@ const carregarCursos = async () => {
       categoria: categoriaSelecionada.value,
       per_page: perPage
     });
-    if (result.success) {
+    if (result.success && result.data) {
       cursos.value = result.data.data || [];
       total.value = result.data.total || 0;
+    } else {
+      console.error('Erro ao carregar cursos:', result.message);
+      cursos.value = [];
     }
+  } catch (error) {
+    console.error('Erro ao carregar cursos:', error);
+    cursos.value = [];
   } finally {
     loading.value = false;
   }

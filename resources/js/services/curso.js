@@ -12,10 +12,12 @@ export const cursoService = {
                 data: response.data,
             };
         } catch (error) {
+            console.error('Erro ao listar cursos:', error.response?.status, error.response?.data || error.message);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Erro ao listar cursos',
                 errors: error.response?.data?.errors || {},
+                status: error.response?.status,
             };
         }
     },

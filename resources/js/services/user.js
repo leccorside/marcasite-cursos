@@ -12,9 +12,11 @@ export const userService = {
                 data: response.data,
             };
         } catch (error) {
+            console.error('Erro ao listar usuários:', error.response?.status, error.response?.data || error.message);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Erro ao carregar usuários',
+                status: error.response?.status,
             };
         }
     },

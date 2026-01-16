@@ -5,6 +5,7 @@ use App\Http\Controllers\CursoController;
 use App\Http\Controllers\InscricaoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas de autenticação (usam sessões via middleware web)
@@ -29,6 +30,9 @@ Route::prefix('api')->group(function () {
         Route::get('/stats/aluno', [InscricaoController::class, 'stats']);
         Route::post('/inscricoes', [InscricaoController::class, 'store']);
         Route::put('/inscricoes/{inscricao}/status', [InscricaoController::class, 'updateStatus']);
+
+        // Dashboard Admin
+        Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
         // Rotas de Cursos (apenas admin)
         Route::get('/cursos', [CursoController::class, 'index']);
