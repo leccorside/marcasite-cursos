@@ -37,12 +37,16 @@ Route::prefix('api')->group(function () {
         Route::put('/cursos/{curso}', [CursoController::class, 'update']);
         Route::delete('/cursos/{curso}', [CursoController::class, 'destroy']);
         Route::get('/cursos/{curso}/inscritos', [CursoController::class, 'inscritos']);
+        Route::get('/cursos/export/excel', [CursoController::class, 'exportExcel']);
+        Route::get('/cursos/export/pdf', [CursoController::class, 'exportPdf']);
 
         // Usuários (apenas admin)
         Route::get('/usuarios', [UserController::class, 'index']);
         Route::post('/usuarios', [UserController::class, 'store']);
         Route::put('/usuarios/{usuario}', [UserController::class, 'update']);
         Route::delete('/usuarios/{usuario}', [UserController::class, 'destroy']);
+        Route::get('/usuarios/export/excel', [UserController::class, 'exportExcel']);
+        Route::get('/usuarios/export/pdf', [UserController::class, 'exportPdf']);
     });
 
     // Rota para verificar autenticação (sem middleware, retorna null se não autenticado)

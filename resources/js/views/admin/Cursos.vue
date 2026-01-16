@@ -51,13 +51,36 @@
           </div>
         </div>
 
-        <!-- Botão Novo -->
-        <button
-          @click="abrirModalCriar"
-          class="bg-[#333] text-white px-5 md:px-8 py-2.5 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap text-sm md:text-base shadow-sm"
-        >
-          Novo curso
-        </button>
+        <!-- Botões de Ação -->
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Botões Exportar -->
+          <button
+            @click="exportarExcel"
+            class="bg-green-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Exportar Excel
+          </button>
+          <button
+            @click="exportarPdf"
+            class="bg-red-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-red-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Exportar PDF
+          </button>
+          
+          <!-- Botão Novo -->
+          <button
+            @click="abrirModalCriar"
+            class="bg-[#333] text-white px-5 md:px-8 py-2.5 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap text-sm md:text-base shadow-sm"
+          >
+            Novo curso
+          </button>
+        </div>
       </div>
 
       <!-- Busca Mobile (Aparece abaixo quando clicado) -->
@@ -285,6 +308,14 @@ const carregarCategorias = async () => {
 const filtrarPorCategoria = () => {
   currentPage.value = 1;
   carregarCursos();
+};
+
+const exportarExcel = () => {
+  window.open('/api/cursos/export/excel', '_blank');
+};
+
+const exportarPdf = () => {
+  window.open('/api/cursos/export/pdf', '_blank');
 };
 
 const debounceSearch = () => {

@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CursoRequest;
 use App\Models\Curso;
+use App\Exports\CursosExport;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 
 class CursoController extends Controller
 {
@@ -263,5 +266,23 @@ class CursoController extends Controller
         return response()->json([
             'message' => 'Curso excluído com sucesso',
         ]);
+    }
+
+    /**
+     * Exportar cursos para Excel
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new CursosExport, 'cursos_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    /**
+     * Exportar cursos para PDF
+     */
+    public function exportPdf()
+    {
+        $cursos = Curso::orderBy('nome')->get();
+        $pdf = DomPDF::loadView('exports.cursos-pdf', compact('cursos'));
+        return $pdf->download('cursos_' . date('Y-m-d_H-i-s') . '.pdf');
     }
 }

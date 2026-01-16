@@ -2,16 +2,38 @@
   <div class="p-4 md:p-8">
     <!-- Topo: Busca e Título -->
     <div class="flex flex-col gap-4 mb-10">
-      <div class="flex justify-between items-center w-full">
+      <div class="flex justify-between items-center w-full flex-wrap gap-4">
         <h1 class="text-2xl md:text-3xl font-black text-black uppercase tracking-tighter">Usuários</h1>
         
-        <!-- Botão Novo -->
-        <button
-          @click="abrirModalCriar"
-          class="bg-[#333] text-white px-5 md:px-8 py-2.5 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap text-sm md:text-base shadow-sm"
-        >
-          Novo usuário
-        </button>
+        <div class="flex items-center gap-3 flex-wrap">
+          <!-- Botões Exportar -->
+          <button
+            @click="exportarExcel"
+            class="bg-green-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Exportar Excel
+          </button>
+          <button
+            @click="exportarPdf"
+            class="bg-red-600 text-white px-4 md:px-6 py-2.5 rounded-lg font-bold hover:bg-red-700 transition-colors whitespace-nowrap text-sm md:text-base shadow-sm flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Exportar PDF
+          </button>
+          
+          <!-- Botão Novo -->
+          <button
+            @click="abrirModalCriar"
+            class="bg-[#333] text-white px-5 md:px-8 py-2.5 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap text-sm md:text-base shadow-sm"
+          >
+            Novo usuário
+          </button>
+        </div>
       </div>
 
       <!-- Busca -->
@@ -214,6 +236,14 @@ const excluirUsuario = async () => {
   }
   usuarioExcluir.value = null;
   carregarUsuarios();
+};
+
+const exportarExcel = () => {
+  window.open('/api/usuarios/export/excel', '_blank');
+};
+
+const exportarPdf = () => {
+  window.open('/api/usuarios/export/pdf', '_blank');
 };
 
 const debounceSearch = () => {

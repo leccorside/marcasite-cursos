@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Exports\UsuariosExport;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 
 class UserController extends Controller
 {
@@ -174,5 +177,23 @@ class UserController extends Controller
         return response()->json([
             'message' => 'Usuário excluído com sucesso',
         ]);
+    }
+
+    /**
+     * Exportar usuários para Excel
+     */
+    public function exportExcel()
+    {
+        return Excel::download(new UsuariosExport, 'usuarios_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
+
+    /**
+     * Exportar usuários para PDF
+     */
+    public function exportPdf()
+    {
+        $usuarios = User::orderBy('name')->get();
+        $pdf = DomPDF::loadView('exports.usuarios-pdf', compact('usuarios'));
+        return $pdf->download('usuarios_' . date('Y-m-d_H-i-s') . '.pdf');
     }
 }
