@@ -93,22 +93,19 @@ MERCADOPAGO_WEBHOOK_SECRET=seu_webhook_secret
 
 ## Executando o projeto
 
-### Desenvolvimento
+### Rodar Containers
 
 ```bash
 # Iniciar containers
 docker-compose up -d
-
-# Compilar assets (Vue.js)
-docker-compose exec node npm run dev
-
-# Acessar a aplicação
-http://localhost:8080
 ```
 
 ### Comandos importantes para evitar erros locais
 
 ```bash
+# Gerar Links simbólicos do storage para imagens no site
+docker-compose exec app php artisan storage:link
+
 # Cria o diretório Armazena views compiladas do Blade
 New-Item -ItemType Directory -Force -Path "storage\framework\views"
 
@@ -129,6 +126,14 @@ docker-compose exec app php artisan config:clear
 
 # Limpa o cache de views compiladas do Blade
 docker-compose exec app php artisan view:clear
+```
+
+### Compilar assets
+
+```bash
+# Compilar assets (Vue.js)
+docker-compose exec node npm run dev
+
 ```
 
 ### Abrindo a url local

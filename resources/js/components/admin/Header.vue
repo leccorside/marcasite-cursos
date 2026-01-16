@@ -67,7 +67,12 @@
               @click.stop="showUserMenu = !showUserMenu"
               class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer overflow-hidden border border-gray-200"
             >
-              <img v-if="auth.user.value?.foto_perfil" :src="`/storage/${auth.user.value.foto_perfil}`" class="w-full h-full object-cover" />
+              <img 
+                v-if="auth.user.value?.foto_perfil && !imageError" 
+                :src="`/storage/${auth.user.value.foto_perfil}`" 
+                @error="imageError = true"
+                class="w-full h-full object-cover" 
+              />
               <svg v-else class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -163,6 +168,7 @@ const showMobileSearch = ref(false);
 const notificationCount = ref(2);
 const userMenuRef = ref(null);
 const mobileSearchInput = ref(null);
+const imageError = ref(false);
 
 watch(showMobileSearch, (val) => {
   if (val) {
@@ -178,6 +184,11 @@ const userName = computed(() => {
 
 const userEmail = computed(() => {
   return auth.user.value?.email || '';
+});
+
+// Resetar erro de imagem quando a foto do usuário mudar
+watch(() => auth.user.value?.foto_perfil, () => {
+  imageError.value = false;
 });
 
 const handleLogout = async () => {
