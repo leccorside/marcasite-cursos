@@ -13,22 +13,35 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Criar usuário admin
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@marcasite.com.br',
-            'password' => Hash::make('password'),
-            'tipo' => 'admin',
-            'ativo' => true,
-        ]);
+        // Criar usuário admin apenas se não existir (idempotente)
+        // Os dados podem ser configurados via variáveis de ambiente no .env
+        $adminEmail = env('ADMIN_EMAIL', 'admin@marcasite.com.br');
+        $adminName = env('ADMIN_NAME', 'Administrador');
+        $adminPassword = env('ADMIN_PASSWORD', 'password');
 
-        // Criar alguns usuários de teste
-        User::factory()->count(5)->create([
-            'tipo' => 'admin',
-        ]);
+        User::firstOrCreate(
+            ['email' => $adminEmail],
+            [
+                'name' => $adminName,
+                'email' => $adminEmail,
+                'password' => Hash::make($adminPassword),
+                'tipo' => 'admin',
+                'ativo' => true,
+            ]
+        );
 
-        User::factory()->count(20)->create([
-            'tipo' => 'aluno',
-        ]);
+        // Criar alguns usuários de teste (apenas se não existirem)
+        // Evita criar duplicatas ao rodar o seeder múltiplas vezes
+        if (User::where('tipo', 'admin')->count() < 6) {
+            User::factory()->count(5)->create([
+                'tipo' => 'admin',
+            ]);
+        }
+
+        if (User::where('tipo', 'aluno')->count() < 21) {
+            User::factory()->count(20)->create([
+                'tipo' => 'aluno',
+            ]);
+        }
     }
 }

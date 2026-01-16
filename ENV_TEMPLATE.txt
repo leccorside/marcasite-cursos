@@ -62,3 +62,10 @@ MAIL_FROM_NAME="${APP_NAME}"
 MERCADOPAGO_ACCESS_TOKEN=
 MERCADOPAGO_PUBLIC_KEY=
 MERCADOPAGO_WEBHOOK_SECRET=
+
+# Usuário Administrador Padrão
+# Este usuário será criado automaticamente ao rodar as migrations com seeders
+# Você pode alterar esses valores antes de executar: php artisan migrate --seed
+ADMIN_NAME="Administrador"
+ADMIN_EMAIL="admin@marcasite.com.br"
+ADMIN_PASSWORD="password"

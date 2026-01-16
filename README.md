@@ -57,13 +57,31 @@ docker-compose exec app php artisan key:generate
 docker-compose exec node npm install
 ```
 
-### 7. Execute as migrations
+### 7. Configure o usuário administrador (opcional)
 
-```bash
-docker-compose exec app php artisan migrate
+Antes de executar as migrations, você pode configurar os dados do usuário admin padrão no arquivo `.env`:
+
+```env
+ADMIN_NAME="Administrador"
+ADMIN_EMAIL="admin@marcasite.com.br"
+ADMIN_PASSWORD="senha123456"
 ```
 
-### 8. Configure o Mercado Pago
+Se não configurar, será usado o padrão:
+- **Email:** `admin@marcasite.com.br`
+- **Senha:** `password`
+
+### 8. Execute as migrations e seeders
+
+Execute as migrations junto com os seeders para criar o banco de dados e popular com dados iniciais (incluindo o usuário admin):
+
+```bash
+docker-compose exec app php artisan migrate --seed
+```
+
+> **Nota:** O seeder é idempotente, ou seja, pode ser executado múltiplas vezes sem criar usuários duplicados. O usuário admin será criado apenas se não existir.
+
+### 9. Configure o Mercado Pago
 
 Adicione suas credenciais do Mercado Pago (Sandbox) no arquivo `.env`:
 
@@ -121,6 +139,34 @@ marcasite/
 - ✅ Busca avançada de inscritos
 - ✅ Exportação em Excel e PDF
 - ✅ Interface responsiva
+
+## Gerenciamento de Usuários
+
+### Criar usuário administrador manualmente
+
+Você pode criar um usuário admin manualmente usando o comando Artisan:
+
+**Modo interativo:**
+```bash
+docker-compose exec app php artisan user:create-admin
+```
+
+**Modo com parâmetros:**
+```bash
+docker-compose exec app php artisan user:create-admin --name="Nome Admin" --email="admin@example.com" --password="senha123456"
+```
+
+O comando valida os dados automaticamente e cria o usuário com tipo `admin` e status `ativo`.
+
+### Usuário admin padrão
+
+Ao executar `php artisan migrate --seed`, um usuário administrador é criado automaticamente com as credenciais configuradas no arquivo `.env`:
+
+- **Email:** Valor de `ADMIN_EMAIL` (padrão: `admin@marcasite.com.br`)
+- **Senha:** Valor de `ADMIN_PASSWORD` (padrão: `password`)
+- **Nome:** Valor de `ADMIN_NAME` (padrão: `Administrador`)
+
+> **Importante:** Altere a senha padrão em produção!
 
 ## Desenvolvimento
 
