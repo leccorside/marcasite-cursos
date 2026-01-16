@@ -115,7 +115,7 @@ class Curso extends Model
     public function atualizarVagas(): void
     {
         $inscritos = $this->inscricoes()
-            ->whereIn('status', ['pendente', 'pago'])
+            ->where('status', 'pago')
             ->count();
         
         $this->vagas_disponiveis = max(0, $this->vagas_total - $inscritos);

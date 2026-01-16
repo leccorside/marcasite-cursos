@@ -46,6 +46,7 @@ Route::prefix('api')->group(function () {
 
     // Rotas Públicas de Cursos (Vitrine)
     Route::get('/public/cursos', [CursoController::class, 'publicIndex']);
+    Route::get('/public/categorias', [CursoController::class, 'categorias']);
 
     // Webhook Mercado Pago
     Route::post('/webhook/mercadopago', [InscricaoController::class, 'webhook'])->name('webhook.mercadopago');

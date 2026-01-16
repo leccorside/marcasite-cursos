@@ -39,6 +39,24 @@ export const cursoService = {
     },
 
     /**
+     * Listar categorias únicas dos cursos ativos
+     */
+    async listarCategorias() {
+        try {
+            const response = await axios.get('/api/public/categorias');
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: 'Erro ao carregar categorias',
+            };
+        }
+    },
+
+    /**
      * Buscar um curso específico
      */
     async buscar(id) {

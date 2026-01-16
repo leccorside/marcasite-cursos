@@ -75,7 +75,7 @@
           <div class="space-y-4">
             <button 
               @click="confirmarInscricao"
-              :disabled="processando || curso.vagas_disponiveis <= 0"
+              :disabled="processando || !isInscricoesAbertas"
               class="w-full bg-black text-white py-4 px-6 rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 group"
             >
               <span v-if="processando">Processando...</span>
@@ -86,8 +86,8 @@
                 </svg>
               </template>
             </button>
-            <p v-if="curso.vagas_disponiveis <= 0" class="text-red-500 text-center text-xs font-bold">
-              Infelizmente não há mais vagas para este curso.
+            <p v-if="!isInscricoesAbertas" class="text-red-500 text-center text-xs font-bold uppercase tracking-widest">
+              {{ curso.vagas_disponiveis <= 0 ? 'Infelizmente não há mais vagas para este curso.' : 'O prazo para inscrições já se encerrou.' }}
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { cursoService } from '@/services/curso';
 import { inscricaoService } from '@/services/inscricao';
@@ -114,6 +114,19 @@ const auth = useAuth();
 const curso = ref(null);
 const loading = ref(true);
 const processando = ref(false);
+
+const isInscricoesAbertas = computed(() => {
+  if (!curso.value) return false;
+  if (curso.value.vagas_disponiveis <= 0) return false;
+  if (!curso.value.data_fim_inscricoes) return true;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const dataFim = new Date(curso.value.data_fim_inscricoes + 'T23:59:59');
+  
+  return hoje <= dataFim;
+});
 
 const carregarCurso = async () => {
   loading.value = true;

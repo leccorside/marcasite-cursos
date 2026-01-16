@@ -90,6 +90,14 @@ class InscricaoController extends Controller
 
         \Log::info("Tentativa de inscrição: Curso ID {$curso->id}, Valor: {$curso->valor}");
 
+        // Verificar se as inscrições estão abertas (vagas e data)
+        if (!$curso->inscricoesAbertas()) {
+            if (!$curso->temVagas()) {
+                return response()->json(['message' => 'Desculpe, não há mais vagas disponíveis para este curso.'], 422);
+            }
+            return response()->json(['message' => 'O prazo para inscrições neste curso já se encerrou.'], 422);
+        }
+
         // Verificar se já está inscrito e pago
         $jaInscrito = Inscricao::where('aluno_id', $aluno->id)
             ->where('curso_id', $curso->id)
@@ -120,11 +128,6 @@ class InscricaoController extends Controller
                 'inscricao' => $jaInscrito,
                 'checkout_url' => $this->gerarLinkPagamento($jaInscrito)
             ]);
-        }
-
-        // Verificar vagas
-        if (!$curso->temVagas()) {
-            return response()->json(['message' => 'Desculpe, não há mais vagas disponíveis para este curso.'], 422);
         }
 
         try {

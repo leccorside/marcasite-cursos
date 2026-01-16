@@ -26,6 +26,11 @@ class CursoController extends Controller
             $query->where('ativo', $request->ativo === 'true' || $request->ativo === '1');
         }
 
+        // Filtro por categoria
+        if ($request->has('categoria') && $request->categoria) {
+            $query->where('categoria', $request->categoria);
+        }
+
         // Ordenação
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -51,13 +56,12 @@ class CursoController extends Controller
     {
         $query = Curso::query()->where('ativo', true);
 
-        // Somente cursos com inscrições abertas (opcional, dependendo da regra de negócio)
-        // $hoje = now()->format('Y-m-d');
-        // $query->where('data_inicio_inscricoes', '<=', $hoje)
-        //       ->where('data_fim_inscricoes', '>=', $hoje);
-
         if ($request->has('search') && $request->search) {
             $query->where('nome', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('categoria') && $request->categoria) {
+            $query->where('categoria', $request->categoria);
         }
 
         $perPage = $request->get('per_page', 9);
@@ -70,6 +74,21 @@ class CursoController extends Controller
             'per_page' => $cursos->perPage(),
             'total' => $cursos->total(),
         ]);
+    }
+
+    /**
+     * Listar categorias únicas dos cursos ativos
+     */
+    public function categorias(): JsonResponse
+    {
+        $categorias = Curso::where('ativo', true)
+            ->whereNotNull('categoria')
+            ->distinct()
+            ->pluck('categoria')
+            ->sort()
+            ->values();
+
+        return response()->json($categorias);
     }
 
     /**

@@ -3,28 +3,47 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
       <h1 class="text-2xl md:text-3xl font-black text-black uppercase tracking-tighter">Vitrine de Cursos</h1>
       
-      <!-- Search Bar -->
-      <div class="relative w-full md:max-w-md">
-        <input
-          v-model="search"
-          type="text"
-          placeholder="O que você deseja aprender?"
-          class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
-          @input="debounceSearch"
-        />
-        <svg
-          class="absolute left-3 top-3 w-5 h-5 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      <div class="flex flex-col sm:flex-row gap-4 w-full md:max-w-2xl">
+        <!-- Filtro Categoria -->
+        <div class="relative w-full sm:w-48 flex-shrink-0">
+          <select
+            v-model="categoriaSelecionada"
+            class="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white appearance-none font-bold text-sm text-gray-700"
+            @change="filtrarPorCategoria"
+          >
+            <option value="">Todas Categorias</option>
+            <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+          <div class="absolute right-3 top-3.5 pointer-events-none text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative flex-1">
+          <input
+            v-model="search"
+            type="text"
+            placeholder="O que você deseja aprender?"
+            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+            @input="debounceSearch"
           />
-        </svg>
+          <svg
+            class="absolute left-3 top-3 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
       </div>
     </div>
 
@@ -78,7 +97,7 @@
             <p class="text-2xl font-black text-black tracking-tighter">{{ formatCurrency(curso.valor) }}</p>
             
             <router-link 
-              v-if="curso.vagas_disponiveis > 0"
+              v-if="isInscricoesAbertas(curso)"
               :to="{ name: 'public.inscricao', params: { id: curso.id } }"
               class="mt-4 w-full bg-black text-white py-3 px-4 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
             >
@@ -121,6 +140,8 @@ import { ref, onMounted } from 'vue';
 import { cursoService } from '@/services/curso';
 
 const cursos = ref([]);
+const categorias = ref([]);
+const categoriaSelecionada = ref('');
 const loading = ref(true);
 const search = ref('');
 const currentPage = ref(1);
@@ -133,6 +154,7 @@ const carregarCursos = async () => {
     const result = await cursoService.listarPublicos({
       page: currentPage.value,
       search: search.value,
+      categoria: categoriaSelecionada.value,
       per_page: 9
     });
     if (result.success) {
@@ -142,6 +164,18 @@ const carregarCursos = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const carregarCategorias = async () => {
+  const result = await cursoService.listarCategorias();
+  if (result.success) {
+    categorias.value = result.data;
+  }
+};
+
+const filtrarPorCategoria = () => {
+  currentPage.value = 1;
+  carregarCursos();
 };
 
 const debounceSearch = () => {
@@ -158,6 +192,20 @@ const irParaPagina = (p) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+const isInscricoesAbertas = (curso) => {
+  if (curso.vagas_disponiveis <= 0) return false;
+  if (!curso.data_fim_inscricoes) return true;
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  // A data do curso vem como YYYY-MM-DD
+  // Criamos o objeto Date e ajustamos para o final do dia
+  const dataFim = new Date(curso.data_fim_inscricoes + 'T23:59:59');
+  
+  return hoje <= dataFim;
+};
+
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -165,5 +213,8 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-onMounted(carregarCursos);
+onMounted(() => {
+  carregarCursos();
+  carregarCategorias();
+});
 </script>

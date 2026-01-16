@@ -15,18 +15,38 @@
           </button>
           
           <!-- Busca Desktop -->
-          <div class="hidden md:block relative w-full max-w-sm">
-            <input
-              v-model="search"
-              type="text"
-              placeholder="Buscar curso..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400"
-              @input="debounceSearch"
-            />
-            <div class="absolute left-3 top-2.5 text-gray-400">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          <div class="hidden md:flex items-center gap-4">
+            <!-- Filtro Categoria -->
+            <div class="relative w-48 flex-shrink-0">
+              <select
+                v-model="categoriaSelecionada"
+                class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white appearance-none font-bold text-sm text-gray-700 shadow-sm"
+                @change="filtrarPorCategoria"
+              >
+                <option value="">Todas Categorias</option>
+                <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+              <div class="absolute right-3 top-2.5 pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Busca Input -->
+            <div class="relative w-full max-w-sm">
+              <input
+                v-model="search"
+                type="text"
+                placeholder="Buscar curso..."
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm"
+                @input="debounceSearch"
+              />
+              <div class="absolute left-3 top-2.5 text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -49,28 +69,48 @@
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-2"
       >
-        <div v-if="showMobileSearch" class="md:hidden relative w-full">
-          <input
-            ref="mobileSearchInput"
-            v-model="search"
-            type="text"
-            placeholder="O que você procura?"
-            class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white shadow-md"
-            @input="debounceSearch"
-          />
-          <div class="absolute left-3 top-3.5 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div v-if="showMobileSearch" class="md:hidden flex flex-col gap-3 w-full bg-white p-4 rounded-xl shadow-md border border-gray-200">
+          <!-- Categoria Mobile -->
+          <div class="relative w-full">
+            <select
+              v-model="categoriaSelecionada"
+              class="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white appearance-none font-bold text-sm text-gray-700"
+              @change="filtrarPorCategoria"
+            >
+              <option value="">Todas Categorias</option>
+              <option v-for="cat in categorias" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+            <div class="absolute right-3 top-3.5 pointer-events-none text-gray-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
-          <button 
-            @click="showMobileSearch = false"
-            class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+
+          <!-- Busca Mobile Input -->
+          <div class="relative w-full">
+            <input
+              ref="mobileSearchInput"
+              v-model="search"
+              type="text"
+              placeholder="O que você procura?"
+              class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+              @input="debounceSearch"
+            />
+            <div class="absolute left-3 top-3.5 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <button 
+              @click="showMobileSearch = false"
+              class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </transition>
     </div>
@@ -176,6 +216,8 @@ import ModalInscritos from '@/components/admin/ModalInscritos.vue';
 import ModalConfirmacao from '@/components/admin/ModalConfirmacao.vue';
 
 const cursos = ref([]);
+const categorias = ref([]);
+const categoriaSelecionada = ref('');
 const loading = ref(true);
 const search = ref('');
 const showMobileSearch = ref(false);
@@ -221,6 +263,7 @@ const carregarCursos = async () => {
     const result = await cursoService.listar({
       page: currentPage.value,
       search: search.value,
+      categoria: categoriaSelecionada.value,
       per_page: perPage
     });
     if (result.success) {
@@ -230,6 +273,18 @@ const carregarCursos = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const carregarCategorias = async () => {
+  const result = await cursoService.listarCategorias();
+  if (result.success) {
+    categorias.value = result.data;
+  }
+};
+
+const filtrarPorCategoria = () => {
+  currentPage.value = 1;
+  carregarCursos();
 };
 
 const debounceSearch = () => {
@@ -268,6 +323,7 @@ const salvarCurso = async (dados, callback) => {
   if (result.success) {
     fecharModal();
     carregarCursos();
+    carregarCategorias(); // Atualiza lista de categorias se uma nova foi criada
     mostrarMensagem(result.message, 'sucesso');
     if (callback) callback({});
   } else if (callback) {
@@ -286,6 +342,7 @@ const excluirCurso = async () => {
   }
   cursoExcluir.value = null;
   carregarCursos();
+  carregarCategorias(); // Atualiza categorias
 };
 
 const mostrarMensagem = (m, t) => {
@@ -301,5 +358,8 @@ const formatPeriodo = (inicio, fim) => {
   return `${d1} - ${d2}`;
 };
 
-onMounted(carregarCursos);
+onMounted(() => {
+  carregarCursos();
+  carregarCategorias();
+});
 </script>
