@@ -49,6 +49,13 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'inscricao/:id',
+        name: 'public.inscricao',
+        component: () => import('@/views/public/Inscricao.vue'),
+        meta: { requiresAuth: true },
+        props: true
+      },
+      {
         path: 'meus-cursos',
         name: 'meus-cursos',
         component: () => import('@/views/public/MeusCursos.vue'),

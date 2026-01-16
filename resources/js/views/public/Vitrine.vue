@@ -1,17 +1,19 @@
 <template>
-  <div class="p-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">Vitrine de Cursos</h1>
-    
-    <!-- Search Bar -->
-    <div class="mb-6 max-w-md">
-      <div class="relative">
+  <div class="p-4 md:p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <h1 class="text-2xl md:text-3xl font-black text-black uppercase tracking-tighter">Vitrine de Cursos</h1>
+      
+      <!-- Search Bar -->
+      <div class="relative w-full md:max-w-md">
         <input
+          v-model="search"
           type="text"
-          placeholder="Buscar cursos..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+          placeholder="O que você deseja aprender?"
+          class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+          @input="debounceSearch"
         />
         <svg
-          class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+          class="absolute left-3 top-3 w-5 h-5 text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -26,65 +28,135 @@
       </div>
     </div>
 
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="cursos.length === 0" class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+      <svg class="mx-auto h-16 w-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      <p class="text-gray-400 text-xl font-medium">Nenhum curso encontrado no momento.</p>
+    </div>
+
     <!-- Cursos Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Card de Curso -->
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
         v-for="curso in cursos"
         :key="curso.id"
-        class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+        class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group"
       >
         <!-- Thumbnail -->
-        <div class="h-48 bg-gray-200 flex items-center justify-center">
-          <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
+        <div class="relative h-48 bg-gray-50 overflow-hidden">
+          <img 
+            v-if="curso.thumbnail" 
+            :src="`/storage/${curso.thumbnail}`" 
+            :alt="curso.nome"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div v-else class="w-full h-full flex items-center justify-center">
+            <svg class="w-16 h-16 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <!-- Categoria Badge -->
+          <div class="absolute top-3 left-3">
+            <span class="px-3 py-1 bg-black/70 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest rounded-full">
+              {{ curso.categoria }}
+            </span>
+          </div>
         </div>
         
         <!-- Content -->
-        <div class="p-4">
-          <h3 class="text-xl font-bold text-gray-900 mb-2">{{ curso.nome }}</h3>
-          <p class="text-2xl font-bold text-gray-900 mb-4">{{ formatCurrency(curso.valor) }}</p>
-          <button class="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors">
-            Comprar
-          </button>
+        <div class="p-5 flex-1 flex flex-col">
+          <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">{{ curso.nome }}</h3>
+          
+          <div class="mt-auto">
+            <p class="text-xs text-gray-500 mb-1">Investimento</p>
+            <p class="text-2xl font-black text-black tracking-tighter">{{ formatCurrency(curso.valor) }}</p>
+            
+            <router-link 
+              v-if="curso.vagas_disponiveis > 0"
+              :to="{ name: 'public.inscricao', params: { id: curso.id } }"
+              class="mt-4 w-full bg-black text-white py-3 px-4 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>Inscrever-se</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </router-link>
+            
+            <div 
+              v-else
+              class="mt-4 w-full bg-gray-100 text-gray-400 py-3 px-4 rounded-xl font-bold text-center cursor-not-allowed uppercase text-xs tracking-widest border border-gray-200"
+            >
+              Inscrições encerradas
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div class="mt-8 flex justify-center gap-2">
+    <div v-if="totalPages > 1" class="mt-12 flex justify-center items-center gap-2">
       <button
-        v-for="page in 5"
+        v-for="page in totalPages"
         :key="page"
+        @click="irParaPagina(page)"
         :class="[
-          'px-4 py-2 rounded-lg transition-colors',
-          page === 2
-            ? 'bg-gray-800 text-white'
-            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          'w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all',
+          page === currentPage ? 'bg-black text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
         ]"
       >
         {{ page }}
-      </button>
-      <span class="px-4 py-2 text-gray-700">...</span>
-      <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-        20
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { cursoService } from '@/services/curso';
 
-const cursos = ref([
-  { id: 1, nome: 'Curso de PHP', valor: 1250.00 },
-  { id: 2, nome: 'Curso de Illustrator', valor: 2400.00 },
-  { id: 3, nome: 'Curso de UX', valor: 1250.00 },
-  { id: 4, nome: 'Curso de Photoshop', valor: 1099.00 },
-  { id: 5, nome: 'Curso de Laravel', valor: 1899.00 },
-  { id: 6, nome: 'Curso de Vue.js', valor: 1599.00 }
-]);
+const cursos = ref([]);
+const loading = ref(true);
+const search = ref('');
+const currentPage = ref(1);
+const totalPages = ref(1);
+let searchTimeout = null;
+
+const carregarCursos = async () => {
+  loading.value = true;
+  try {
+    const result = await cursoService.listarPublicos({
+      page: currentPage.value,
+      search: search.value,
+      per_page: 9
+    });
+    if (result.success) {
+      cursos.value = result.data.data;
+      totalPages.value = result.data.last_page;
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const debounceSearch = () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1;
+    carregarCursos();
+  }, 500);
+};
+
+const irParaPagina = (p) => {
+  currentPage.value = p;
+  carregarCursos();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -92,4 +164,6 @@ const formatCurrency = (value) => {
     currency: 'BRL'
   }).format(value);
 };
+
+onMounted(carregarCursos);
 </script>

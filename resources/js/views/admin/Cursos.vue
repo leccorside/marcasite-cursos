@@ -191,7 +191,7 @@ watch(showMobileSearch, (val) => {
 });
 
 const total = ref(0);
-const perPage = 15;
+const perPage = 9;
 const mensagem = ref('');
 const mensagemTipo = ref('sucesso');
 const mostrarModal = ref(false);
@@ -220,7 +220,8 @@ const carregarCursos = async () => {
   try {
     const result = await cursoService.listar({
       page: currentPage.value,
-      search: search.value
+      search: search.value,
+      per_page: perPage
     });
     if (result.success) {
       cursos.value = result.data.data || [];

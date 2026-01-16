@@ -21,6 +21,24 @@ export const cursoService = {
     },
 
     /**
+     * Listar cursos para a vitrine pública
+     */
+    async listarPublicos(params = {}) {
+        try {
+            const response = await axios.get('/api/public/cursos', { params });
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Erro ao carregar vitrine',
+            };
+        }
+    },
+
+    /**
      * Buscar um curso específico
      */
     async buscar(id) {

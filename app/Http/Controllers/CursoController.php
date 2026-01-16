@@ -32,8 +32,36 @@ class CursoController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Paginação
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', 9);
         $cursos = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $cursos->items(),
+            'current_page' => $cursos->currentPage(),
+            'last_page' => $cursos->lastPage(),
+            'per_page' => $cursos->perPage(),
+            'total' => $cursos->total(),
+        ]);
+    }
+
+    /**
+     * Listar cursos ativos para a vitrine pública
+     */
+    public function publicIndex(Request $request): JsonResponse
+    {
+        $query = Curso::query()->where('ativo', true);
+
+        // Somente cursos com inscrições abertas (opcional, dependendo da regra de negócio)
+        // $hoje = now()->format('Y-m-d');
+        // $query->where('data_inicio_inscricoes', '<=', $hoje)
+        //       ->where('data_fim_inscricoes', '>=', $hoje);
+
+        if ($request->has('search') && $request->search) {
+            $query->where('nome', 'like', '%' . $request->search . '%');
+        }
+
+        $perPage = $request->get('per_page', 9);
+        $cursos = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'data' => $cursos->items(),
