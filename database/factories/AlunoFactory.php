@@ -18,10 +18,15 @@ class AlunoFactory extends Factory
      */
     public function definition(): array
     {
+        // Gerar CPF único
+        do {
+            $cpf = $this->gerarCPF();
+        } while (Aluno::where('cpf', $cpf)->exists());
+
         return [
             'nome' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'cpf' => $this->gerarCPF(),
+            'cpf' => $cpf,
             'telefone' => $this->gerarTelefone(),
             'celular' => $this->gerarCelular(),
             'data_nascimento' => fake()->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),

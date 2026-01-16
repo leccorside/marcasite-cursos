@@ -18,27 +18,48 @@ class AlunoSeeder extends Seeder
         $usersAlunos = User::where('tipo', 'aluno')->get();
 
         foreach ($usersAlunos as $user) {
-            Aluno::create([
-                'nome' => $user->name,
-                'email' => $user->email,
-                'cpf' => $this->gerarCPF(),
-                'telefone' => $this->gerarTelefone(),
-                'celular' => $this->gerarCelular(),
-                'data_nascimento' => fake()->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
-                'sexo' => fake()->randomElement(['M', 'F', 'Outro']),
-                'cep' => $this->gerarCEP(),
-                'endereco' => fake()->streetName(),
-                'numero' => fake()->buildingNumber(),
-                'complemento' => fake()->optional()->secondaryAddress(),
-                'bairro' => fake()->citySuffix(),
-                'cidade' => fake()->city(),
-                'estado' => fake()->stateAbbr(),
-                'user_id' => $user->id,
-            ]);
+            // Verificar se o aluno já existe para este usuário ou email
+            $alunoExistente = Aluno::where('email', $user->email)
+                ->orWhere('user_id', $user->id)
+                ->first();
+
+            if (!$alunoExistente) {
+                // Gerar CPF único
+                do {
+                    $cpf = $this->gerarCPF();
+                } while (Aluno::where('cpf', $cpf)->exists());
+
+                Aluno::create([
+                    'nome' => $user->name,
+                    'email' => $user->email,
+                    'cpf' => $cpf,
+                    'telefone' => $this->gerarTelefone(),
+                    'celular' => $this->gerarCelular(),
+                    'data_nascimento' => fake()->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
+                    'sexo' => fake()->randomElement(['M', 'F', 'Outro']),
+                    'cep' => $this->gerarCEP(),
+                    'endereco' => fake()->streetName(),
+                    'numero' => fake()->buildingNumber(),
+                    'complemento' => fake()->optional()->secondaryAddress(),
+                    'bairro' => fake()->citySuffix(),
+                    'cidade' => fake()->city(),
+                    'estado' => fake()->stateAbbr(),
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
         // Criar alguns alunos sem usuário (caso necessário)
-        Aluno::factory()->count(10)->create();
+        // Verificar quantos alunos sem user_id já existem
+        $alunosSemUsuario = Aluno::whereNull('user_id')->count();
+        $quantidadeParaCriar = max(0, 10 - $alunosSemUsuario);
+
+        if ($quantidadeParaCriar > 0) {
+            // Resetar o estado único do Faker para garantir emails únicos
+            fake()->unique(true);
+
+            Aluno::factory()->count($quantidadeParaCriar)->create();
+        }
     }
 
     /**
