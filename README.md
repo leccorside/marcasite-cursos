@@ -93,13 +93,6 @@ MERCADOPAGO_WEBHOOK_SECRET=seu_webhook_secret
 
 ## Executando o projeto
 
-### Rodar Containers
-
-```bash
-# Iniciar containers
-docker-compose up -d
-```
-
 ### Comandos importantes para evitar erros locais
 
 ```bash
