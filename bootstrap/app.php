@@ -14,10 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'aluno' => \App\Http\Middleware\EnsureUserIsAluno::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'api/webhook/mercadopago',
+            'api/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

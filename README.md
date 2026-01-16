@@ -146,9 +146,9 @@ docker-compose exec node npm run build
 
 ```
 marcasite/
-├── app/                    # Aplicação Laravel
-├── bootstrap/              # Arquivos de inicialização
-├── config/                 # Arquivos de configuração
+├── app/                   # Aplicação Laravel
+├── bootstrap/             # Arquivos de inicialização
+├── config/                # Arquivos de configuração
 ├── database/              # Migrations, seeders, factories
 ├── docker/                # Configurações Docker
 ├── public/                # Arquivos públicos
@@ -171,22 +171,6 @@ marcasite/
 - ✅ Interface responsiva
 
 ## Gerenciamento de Usuários
-
-### Criar usuário administrador manualmente
-
-Você pode criar um usuário admin manualmente usando o comando Artisan:
-
-**Modo interativo:**
-```bash
-docker-compose exec app php artisan user:create-admin
-```
-
-**Modo com parâmetros:**
-```bash
-docker-compose exec app php artisan user:create-admin --name="Nome Admin" --email="admin@example.com" --password="senha123456"
-```
-
-O comando valida os dados automaticamente e cria o usuário com tipo `admin` e status `ativo`.
 
 ### Usuário admin padrão
 

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class CursoController extends Controller
 {
@@ -70,17 +71,28 @@ class CursoController extends Controller
         $perPage = $request->get('per_page', 9);
         $cursos = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
-        // Se o usuário estiver logado, marcamos os cursos em que ele já está inscrito
-        $user = auth()->user();
-        if ($user && $user->aluno) {
-            $inscricoes = $user->aluno->inscricoes()
-                ->whereIn('status', ['pago', 'pendente'])
-                ->pluck('status', 'curso_id');
-                
-            $cursos->getCollection()->transform(function ($curso) use ($inscricoes) {
-                $curso->status_inscricao = $inscricoes->get($curso->id);
-                return $curso;
-            });
+        // Se o usuário estiver logado (via JWT), marcamos os cursos em que ele já está inscrito
+        // Tentar autenticar via JWT, mas não falhar se não houver token (rota pública)
+        try {
+            // Tentar obter o token do header Authorization
+            $token = $request->bearerToken();
+            if ($token) {
+                // Tentar autenticar o usuário com o token
+                $user = JWTAuth::setToken($token)->authenticate();
+                if ($user && $user->aluno) {
+                    $inscricoes = $user->aluno->inscricoes()
+                        ->whereIn('status', ['pago', 'pendente'])
+                        ->pluck('status', 'curso_id');
+                        
+                    $cursos->getCollection()->transform(function ($curso) use ($inscricoes) {
+                        $curso->status_inscricao = $inscricoes->get($curso->id);
+                        return $curso;
+                    });
+                }
+            }
+        } catch (\Exception $e) {
+            // Se houver erro na autenticação (token inválido, expirado, etc), continuar sem verificar inscrições
+            // Isso permite que usuários não autenticados vejam a vitrine normalmente
         }
 
         return response()->json([
