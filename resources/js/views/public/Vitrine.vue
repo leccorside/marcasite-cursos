@@ -96,16 +96,36 @@
             <p class="text-xs text-gray-500 mb-1">Investimento</p>
             <p class="text-2xl font-black text-black tracking-tighter">{{ formatCurrency(curso.valor) }}</p>
             
-            <router-link 
-              v-if="isInscricoesAbertas(curso)"
-              :to="{ name: 'public.inscricao', params: { id: curso.id } }"
-              class="mt-4 w-full bg-black text-white py-3 px-4 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Inscrever-se</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </router-link>
+            <!-- Botão de Inscrição / Status -->
+            <template v-if="curso.status_inscricao === 'pago'">
+              <div class="mt-4 w-full bg-green-100 text-green-700 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 uppercase text-xs tracking-widest border border-green-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Inscrito</span>
+              </div>
+            </template>
+
+            <template v-else-if="curso.status_inscricao === 'pendente'">
+              <router-link 
+                :to="{ name: 'meus-cursos' }"
+                class="mt-4 w-full bg-yellow-100 text-yellow-700 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 uppercase text-xs tracking-widest border border-yellow-200 hover:bg-yellow-200 transition-colors"
+              >
+                <span>Pagamento Pendente</span>
+              </router-link>
+            </template>
+
+            <template v-else-if="isInscricoesAbertas(curso)">
+              <router-link 
+                :to="{ name: 'public.inscricao', params: { id: curso.id } }"
+                class="mt-4 w-full bg-black text-white py-3 px-4 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <span>Inscrever-se</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </router-link>
+            </template>
             
             <div 
               v-else
@@ -193,15 +213,20 @@ const irParaPagina = (p) => {
 };
 
 const isInscricoesAbertas = (curso) => {
-  if (curso.vagas_disponiveis <= 0) return false;
+  if (Number(curso.vagas_disponiveis) <= 0) return false;
   if (!curso.data_fim_inscricoes) return true;
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  // A data do curso vem como YYYY-MM-DD
-  // Criamos o objeto Date e ajustamos para o final do dia
-  const dataFim = new Date(curso.data_fim_inscricoes + 'T23:59:59');
+  // Garantir que pegamos apenas a parte da data YYYY-MM-DD
+  const dataString = typeof curso.data_fim_inscricoes === 'string' 
+    ? curso.data_fim_inscricoes.split('T')[0] 
+    : curso.data_fim_inscricoes;
+    
+  // Criar data de fim de forma segura (ano, mês-0-indexado, dia, hora, min, seg)
+  const [year, month, day] = dataString.split('-').map(Number);
+  const dataFim = new Date(year, month - 1, day, 23, 59, 59);
   
   return hoje <= dataFim;
 };

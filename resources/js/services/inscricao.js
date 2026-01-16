@@ -38,5 +38,23 @@ export const inscricaoService = {
                 errors: error.response?.data?.errors || {},
             };
         }
+    },
+
+    /**
+     * Atualizar status da inscrição (Admin)
+     */
+    async atualizarStatus(id, status) {
+        try {
+            const response = await axios.put(`/api/inscricoes/${id}/status`, { status });
+            return {
+                success: true,
+                message: response.data.message,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Erro ao atualizar status',
+            };
+        }
     }
 };

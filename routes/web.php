@@ -28,6 +28,7 @@ Route::prefix('api')->group(function () {
         Route::get('/meus-cursos', [InscricaoController::class, 'index']);
         Route::get('/stats/aluno', [InscricaoController::class, 'stats']);
         Route::post('/inscricoes', [InscricaoController::class, 'store']);
+        Route::put('/inscricoes/{inscricao}/status', [InscricaoController::class, 'updateStatus']);
 
         // Rotas de Cursos (apenas admin)
         Route::get('/cursos', [CursoController::class, 'index']);

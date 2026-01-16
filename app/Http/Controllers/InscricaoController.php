@@ -221,6 +221,31 @@ class InscricaoController extends Controller
     }
 
     /**
+     * Atualizar status da inscrição manualmente (Admin)
+     */
+    public function updateStatus(Request $request, Inscricao $inscricao): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required|in:pendente,pago,cancelado',
+        ]);
+
+        $statusAntigo = $inscricao->status;
+        $novoStatus = $request->status;
+
+        $inscricao->update(['status' => $novoStatus]);
+
+        // Se o status mudou para 'pago' ou era 'pago' e mudou, atualiza as vagas
+        if ($statusAntigo === 'pago' || $novoStatus === 'pago') {
+            $inscricao->curso->atualizarVagas();
+        }
+
+        return response()->json([
+            'message' => 'Status da inscrição atualizado com sucesso.',
+            'inscricao' => $inscricao
+        ]);
+    }
+
+    /**
      * Retorno do checkout (redirecionamento do Mercado Pago)
      */
     public function retorno(Request $request)

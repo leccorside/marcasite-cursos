@@ -73,22 +73,51 @@
           </div>
 
           <div class="space-y-4">
-            <button 
-              @click="confirmarInscricao"
-              :disabled="processando || !isInscricoesAbertas"
-              class="w-full bg-black text-white py-4 px-6 rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 group"
-            >
-              <span v-if="processando">Processando...</span>
-              <template v-else>
-                <span>Confirmar e Pagar</span>
-                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </template>
-            </button>
-            <p v-if="!isInscricoesAbertas" class="text-red-500 text-center text-xs font-bold uppercase tracking-widest">
-              {{ curso.vagas_disponiveis <= 0 ? 'Infelizmente não há mais vagas para este curso.' : 'O prazo para inscrições já se encerrou.' }}
-            </p>
+            <!-- Botão se já estiver inscrito -->
+            <template v-if="curso.status_inscricao === 'pago'">
+              <div class="w-full bg-green-100 text-green-700 py-4 px-6 rounded-xl font-black uppercase tracking-widest text-center border border-green-200 shadow-sm">
+                Você já está inscrito!
+              </div>
+              <router-link 
+                to="/meus-cursos"
+                class="w-full bg-black text-white py-4 px-6 rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all text-center block"
+              >
+                Acessar Meus Cursos
+              </router-link>
+            </template>
+
+            <template v-else-if="curso.status_inscricao === 'pendente'">
+              <div class="w-full bg-yellow-100 text-yellow-700 py-4 px-6 rounded-xl font-black uppercase tracking-widest text-center border border-yellow-200 shadow-sm">
+                Inscrição Pendente
+              </div>
+              <button 
+                @click="confirmarInscricao"
+                :disabled="processando"
+                class="w-full bg-black text-white py-4 px-6 rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg flex items-center justify-center gap-3 group"
+              >
+                <span v-if="processando">Processando...</span>
+                <span v-else>Pagar Agora</span>
+              </button>
+            </template>
+
+            <template v-else>
+              <button 
+                @click="confirmarInscricao"
+                :disabled="processando || !isInscricoesAbertas"
+                class="w-full bg-black text-white py-4 px-6 rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-3 group"
+              >
+                <span v-if="processando">Processando...</span>
+                <template v-else>
+                  <span>Confirmar e Pagar</span>
+                  <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </template>
+              </button>
+              <p v-if="!isInscricoesAbertas" class="text-red-500 text-center text-xs font-bold uppercase tracking-widest">
+                {{ curso.vagas_disponiveis <= 0 ? 'Infelizmente não há mais vagas para este curso.' : 'O prazo para inscrições já se encerrou.' }}
+              </p>
+            </template>
           </div>
         </div>
       </div>
@@ -117,13 +146,20 @@ const processando = ref(false);
 
 const isInscricoesAbertas = computed(() => {
   if (!curso.value) return false;
-  if (curso.value.vagas_disponiveis <= 0) return false;
+  if (Number(curso.value.vagas_disponiveis) <= 0) return false;
   if (!curso.value.data_fim_inscricoes) return true;
 
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  const dataFim = new Date(curso.value.data_fim_inscricoes + 'T23:59:59');
+  // Garantir que pegamos apenas a parte da data YYYY-MM-DD
+  const dataString = typeof curso.value.data_fim_inscricoes === 'string' 
+    ? curso.value.data_fim_inscricoes.split('T')[0] 
+    : curso.value.data_fim_inscricoes;
+
+  // Criar data de fim de forma segura (ano, mês-0-indexado, dia, hora, min, seg)
+  const [year, month, day] = dataString.split('-').map(Number);
+  const dataFim = new Date(year, month - 1, day, 23, 59, 59);
   
   return hoje <= dataFim;
 });

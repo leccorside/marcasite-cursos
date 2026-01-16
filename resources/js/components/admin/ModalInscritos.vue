@@ -47,12 +47,23 @@
                 </td>
                 <td class="p-4 text-sm font-medium text-gray-900 border-r border-gray-50">{{ inscrito.aluno_cpf }}</td>
                 <td class="p-4 text-center border-r border-gray-50">
-                  <span :class="[
-                    'px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider',
-                    inscrito.status === 'pago' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                  ]">
-                    {{ inscrito.status }}
-                  </span>
+                  <div class="flex items-center justify-center gap-2">
+                    <select 
+                      v-model="inscrito.status"
+                      @change="alterarStatus(inscrito)"
+                      :disabled="atualizandoId === inscrito.id"
+                      :class="[
+                        'px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border-0 cursor-pointer focus:ring-0',
+                        inscrito.status === 'pago' ? 'bg-green-100 text-green-700' : 
+                        inscrito.status === 'cancelado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                      ]"
+                    >
+                      <option value="pendente">Pendente</option>
+                      <option value="pago">Pago</option>
+                      <option value="cancelado">Cancelado</option>
+                    </select>
+                    <div v-if="atualizandoId === inscrito.id" class="animate-spin h-3 w-3 border-b-2 border-gray-500 rounded-full"></div>
+                  </div>
                 </td>
                 <td class="p-4 text-sm font-medium text-gray-900 text-center">
                   {{ inscrito.data_inscricao }}
@@ -76,6 +87,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { cursoService } from '@/services/curso';
+import { inscricaoService } from '@/services/inscricao';
 
 const props = defineProps({
   cursoId: { type: Number, required: true },
@@ -86,6 +98,7 @@ const emit = defineEmits(['fechar']);
 
 const inscritos = ref([]);
 const loading = ref(true);
+const atualizandoId = ref(null);
 
 const carregarInscritos = async () => {
   loading.value = true;
@@ -96,6 +109,22 @@ const carregarInscritos = async () => {
     }
   } finally {
     loading.value = false;
+  }
+};
+
+const alterarStatus = async (inscrito) => {
+  atualizandoId.value = inscrito.id;
+  try {
+    const result = await inscricaoService.atualizarStatus(inscrito.id, inscrito.status);
+    if (result.success) {
+      // O status já está atualizado via v-model, mas poderíamos recarregar para garantir
+      // carregarInscritos();
+    } else {
+      alert(result.message);
+      carregarInscritos(); // Volta ao status original se der erro
+    }
+  } finally {
+    atualizandoId.value = null;
   }
 };
 

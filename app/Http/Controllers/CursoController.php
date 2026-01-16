@@ -67,6 +67,19 @@ class CursoController extends Controller
         $perPage = $request->get('per_page', 9);
         $cursos = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
+        // Se o usuário estiver logado, marcamos os cursos em que ele já está inscrito
+        $user = auth()->user();
+        if ($user && $user->aluno) {
+            $inscricoes = $user->aluno->inscricoes()
+                ->whereIn('status', ['pago', 'pendente'])
+                ->pluck('status', 'curso_id');
+                
+            $cursos->getCollection()->transform(function ($curso) use ($inscricoes) {
+                $curso->status_inscricao = $inscricoes->get($curso->id);
+                return $curso;
+            });
+        }
+
         return response()->json([
             'data' => $cursos->items(),
             'current_page' => $cursos->currentPage(),
@@ -96,7 +109,22 @@ class CursoController extends Controller
      */
     public function show(Curso $curso): JsonResponse
     {
-        return response()->json($curso->load('materiais'));
+        $curso->load('materiais');
+
+        // Se o usuário estiver logado, verificar status da inscrição
+        $user = auth()->user();
+        if ($user && $user->aluno) {
+            $inscricao = $user->aluno->inscricoes()
+                ->where('curso_id', $curso->id)
+                ->whereIn('status', ['pago', 'pendente'])
+                ->first();
+            
+            if ($inscricao) {
+                $curso->status_inscricao = $inscricao->status;
+            }
+        }
+
+        return response()->json($curso);
     }
 
     /**
