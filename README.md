@@ -106,6 +106,38 @@ docker-compose exec node npm run dev
 http://localhost:8080
 ```
 
+### Comandos importantes para evitar erros locais
+
+```bash
+# Cria o diretório Armazena views compiladas do Blade
+New-Item -ItemType Directory -Force -Path "storage\framework\views"
+
+# Cria o diretório base de cache do framework
+New-Item -ItemType Directory -Force -Path "storage\framework\cache"
+
+# Cria o diretório de cache de dados (configurações, rotas, etc.)
+New-Item -ItemType Directory -Force -Path "storage\framework\cache\data"
+
+# Cria o diretório de sessões de usuários (driver file)
+New-Item -ItemType Directory -Force -Path "storage\framework\sessions"
+
+# Cria o diretório de arquivos temporários de testes
+New-Item -ItemType Directory -Force -Path "storage\framework\testing"
+
+# Limpa o cache de configuração do Laravel
+docker-compose exec app php artisan config:clear
+
+# Limpa o cache de views compiladas do Blade
+docker-compose exec app php artisan view:clear
+```
+
+### Abrindo a url local
+
+```bash
+# Acessar a aplicação
+http://localhost:8080
+```
+
 ### Build de produção
 
 ```bash
