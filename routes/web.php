@@ -25,6 +25,7 @@ Route::prefix('api')->group(function () {
         Route::middleware(['admin'])->prefix('cursos')->group(function () {
             Route::get('/', [\App\Http\Controllers\CursoController::class, 'index']);
             Route::get('/{curso}', [\App\Http\Controllers\CursoController::class, 'show']);
+            Route::get('/{curso}/inscritos', [\App\Http\Controllers\CursoController::class, 'inscritos']);
             Route::post('/', [\App\Http\Controllers\CursoController::class, 'store']);
             Route::put('/{curso}', [\App\Http\Controllers\CursoController::class, 'update']);
             Route::delete('/{curso}', [\App\Http\Controllers\CursoController::class, 'destroy']);

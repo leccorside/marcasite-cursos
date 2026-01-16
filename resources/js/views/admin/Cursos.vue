@@ -112,6 +112,12 @@
             <td class="hidden sm:table-cell p-4 md:p-6 text-xs md:text-sm font-medium text-gray-900 text-center border-r border-gray-50">{{ curso.vagas_disponiveis }}</td>
             <td class="p-4 md:p-6 text-right">
               <div class="flex justify-end gap-2 md:gap-4">
+                <!-- Ver inscritos -->
+                <button @click="abrirModalInscritos(curso)" class="text-black hover:opacity-60 transition-opacity" title="Ver inscritos">
+                  <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </button>
                 <!-- Editar -->
                 <button @click="abrirModalEditar(curso.id)" class="text-black hover:opacity-60 transition-opacity" title="Editar curso">
                   <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -157,6 +163,7 @@
 
     <!-- Modais -->
     <ModalCurso v-if="mostrarModal" :curso="cursoEditando" @fechar="fecharModal" @salvar="salvarCurso" />
+    <ModalInscritos v-if="mostrarInscritos" :curso-id="cursoSelecionado?.id" :curso-nome="cursoSelecionado?.nome" @fechar="mostrarInscritos = false" />
     <ModalConfirmacao v-if="cursoExcluir" :mensagem="'Deseja realmente excluir este curso?'" @confirmar="excluirCurso" @cancelar="cursoExcluir = null" />
   </div>
 </template>
@@ -165,6 +172,7 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { cursoService } from '@/services/curso';
 import ModalCurso from '@/components/admin/ModalCurso.vue';
+import ModalInscritos from '@/components/admin/ModalInscritos.vue';
 import ModalConfirmacao from '@/components/admin/ModalConfirmacao.vue';
 
 const cursos = ref([]);
@@ -181,11 +189,14 @@ watch(showMobileSearch, (val) => {
     });
   }
 });
+
 const total = ref(0);
 const perPage = 15;
 const mensagem = ref('');
 const mensagemTipo = ref('sucesso');
 const mostrarModal = ref(false);
+const mostrarInscritos = ref(false);
+const cursoSelecionado = ref(null);
 const cursoEditando = ref(null);
 const cursoExcluir = ref(null);
 let searchTimeout = null;
@@ -241,6 +252,11 @@ const abrirModalEditar = async (id) => {
     cursoEditando.value = result.data;
     mostrarModal.value = true;
   }
+};
+
+const abrirModalInscritos = (curso) => {
+  cursoSelecionado.value = curso;
+  mostrarInscritos.value = true;
 };
 
 const salvarCurso = async (dados, callback) => {

@@ -39,6 +39,24 @@ export const cursoService = {
     },
 
     /**
+     * Listar inscritos de um curso
+     */
+    async listarInscritos(id) {
+        try {
+            const response = await axios.get(`/api/cursos/${id}/inscritos`);
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Erro ao listar inscritos',
+            };
+        }
+    },
+
+    /**
      * Criar curso
      */
     async criar(dados) {

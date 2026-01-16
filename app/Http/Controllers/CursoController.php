@@ -146,6 +146,28 @@ class CursoController extends Controller
     }
 
     /**
+     * Listar inscritos de um curso específico
+     */
+    public function inscritos(Curso $curso): JsonResponse
+    {
+        $inscritos = $curso->inscricoes()
+            ->with('aluno')
+            ->get()
+            ->map(function ($inscricao) {
+                return [
+                    'id' => $inscricao->id,
+                    'aluno_nome' => $inscricao->aluno->nome,
+                    'aluno_email' => $inscricao->aluno->email,
+                    'aluno_cpf' => $inscricao->aluno->cpf_formatado,
+                    'status' => $inscricao->status,
+                    'data_inscricao' => $inscricao->created_at->format('d/m/Y H:i'),
+                ];
+            });
+
+        return response()->json($inscritos);
+    }
+
+    /**
      * Excluir um curso (soft delete)
      */
     public function destroy(Curso $curso): JsonResponse
