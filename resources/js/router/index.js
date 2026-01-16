@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useLoading } from '@/composables/useLoading';
 
 const routes = [
   // Rotas de Autenticação (sem layout)
@@ -29,20 +30,23 @@ const routes = [
     component: () => import('@/views/auth/ResetPassword.vue'),
     meta: { requiresGuest: true }
   },
-  // Rotas Públicas
+  // Rotas Públicas (todos os usuários autenticados podem acessar)
   {
     path: '/',
     component: PublicLayout,
+    meta: { requiresAuth: true },
     children: [
       {
         path: '',
         name: 'home',
-        component: () => import('@/views/public/Home.vue')
+        component: () => import('@/views/public/Home.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: 'vitrine',
         name: 'vitrine',
-        component: () => import('@/views/public/Vitrine.vue')
+        component: () => import('@/views/public/Vitrine.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: 'meus-cursos',
@@ -93,39 +97,84 @@ const router = createRouter({
   routes,
 });
 
+// Instância do loading para uso nos guards
+const { startLoading, stopLoading } = useLoading();
+
 // Navigation guards
 router.beforeEach(async (to, from, next) => {
-  const auth = useAuth();
+  try {
+    const auth = useAuth();
 
-  // Verificar autenticação se necessário
-  if (to.meta.requiresAuth || to.meta.requiresAdmin) {
-    await auth.checkAuth();
-  }
-
-  // Verificar se precisa estar autenticado
-  if (to.meta.requiresAuth && !auth.isAuthenticated.value) {
-    next({ name: 'login', query: { redirect: to.fullPath } });
-    return;
-  }
-
-  // Verificar se precisa ser admin
-  if (to.meta.requiresAdmin && !auth.isAdmin.value) {
-    next({ name: 'home' });
-    return;
-  }
-
-  // Verificar se precisa estar desautenticado (guest)
-  if (to.meta.requiresGuest && auth.isAuthenticated.value) {
-    // Se já estiver autenticado, redirecionar conforme tipo
-    if (auth.user.value?.tipo === 'admin') {
-      next({ name: 'admin.dashboard' });
-    } else {
-      next({ name: 'home' });
+    // Iniciar loading apenas se estiver mudando de rota
+    // A verificação funciona mesmo na primeira navegação (from.name será undefined)
+    if (!from.name || to.path !== from.path) {
+      startLoading();
     }
-    return;
-  }
 
-  next();
+    // Verificar autenticação apenas se necessário
+    // Se já está autenticado e não precisa verificar admin, usa cache
+    // Se não está autenticado ou precisa verificar admin, força verificação
+    if (!auth.isAuthenticated.value || to.meta.requiresAdmin) {
+      await auth.checkAuth();
+    } else {
+      // Verificação leve usando cache (sem fazer requisição HTTP)
+      await auth.checkAuth(false);
+    }
+
+    // Verificar se a rota é apenas para convidados (não autenticados)
+    if (to.meta.requiresGuest) {
+      // Se já estiver autenticado, redirecionar conforme tipo
+      if (auth.isAuthenticated.value) {
+        if (auth.user.value?.tipo === 'admin') {
+          next({ name: 'admin.dashboard' });
+        } else {
+          next({ name: 'home' });
+        }
+        return;
+      }
+      // Se não estiver autenticado, permitir acesso
+      next();
+      return;
+    }
+
+    // POR PADRÃO: Todas as rotas que não são de guest exigem autenticação
+    // Verificar se precisa estar autenticado (padrão para todas as rotas)
+    if (!auth.isAuthenticated.value) {
+      // Redirecionar para login, mantendo a rota desejada para redirecionamento após login
+      next({ name: 'login', query: { redirect: to.fullPath } });
+      return;
+    }
+
+    // Verificar se precisa ser admin (para rotas administrativas)
+    if (to.meta.requiresAdmin && !auth.isAdmin.value) {
+      // Se não for admin, redirecionar para home
+      next({ name: 'home' });
+      return;
+    }
+
+    // Todas as verificações passaram, permitir acesso
+    next();
+  } catch (error) {
+    // Em caso de erro, parar o loading e rejeitar a navegação
+    stopLoading();
+    console.error('Erro na navegação:', error);
+    next(false);
+  }
+});
+
+// Guard para parar o loading após a transição
+router.afterEach(() => {
+  // Aguardar um pequeno delay para garantir que o componente foi montado
+  // Delay reduzido para resposta mais rápida
+  setTimeout(() => {
+    stopLoading();
+  }, 50);
+});
+
+// Guard para parar o loading em caso de erro na navegação
+router.onError((error) => {
+  stopLoading();
+  console.error('Erro na navegação da rota:', error);
 });
 
 export default router;

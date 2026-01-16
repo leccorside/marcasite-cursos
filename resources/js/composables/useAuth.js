@@ -1,31 +1,49 @@
 import { ref, computed } from 'vue';
 import { authService } from '@/services/auth';
-import { useRouter } from 'vue-router';
 
 // Estado global compartilhado
 const user = ref(null);
 const loading = ref(false);
+const lastCheckTime = ref(0);
+const CHECK_CACHE_TIME = 30000; // 30 segundos de cache
+let checkingPromise = null; // Evitar múltiplas chamadas simultâneas
 
 export function useAuth() {
-    const router = useRouter();
-
     /**
-     * Verificar autenticação
+     * Verificar autenticação (com cache e proteção contra chamadas duplicadas)
      */
-    const checkAuth = async () => {
-        loading.value = true;
-        try {
-            const result = await authService.checkAuth();
-            if (result.success && result.user) {
-                user.value = result.user;
-            } else {
-                user.value = null;
-            }
-        } catch (error) {
-            user.value = null;
-        } finally {
-            loading.value = false;
+    const checkAuth = async (force = false) => {
+        // Se já está verificando, retorna a promise existente
+        if (checkingPromise && !force) {
+            return checkingPromise;
         }
+
+        // Se tem cache recente e não é forçado, retorna sem fazer requisição
+        const now = Date.now();
+        if (!force && user.value && (now - lastCheckTime.value) < CHECK_CACHE_TIME) {
+            return;
+        }
+
+        // Cria promise única para evitar requisições duplicadas
+        checkingPromise = (async () => {
+            loading.value = true;
+            try {
+                const result = await authService.checkAuth();
+                if (result.success && result.user) {
+                    user.value = result.user;
+                } else {
+                    user.value = null;
+                }
+                lastCheckTime.value = now;
+            } catch (error) {
+                user.value = null;
+            } finally {
+                loading.value = false;
+                checkingPromise = null; // Limpa a promise
+            }
+        })();
+
+        return checkingPromise;
     };
 
     /**
@@ -37,8 +55,8 @@ export function useAuth() {
             const result = await authService.login(email, password);
             if (result.success) {
                 user.value = result.data.user;
-                await router.push(result.data.redirect || '/');
-                return { success: true };
+                lastCheckTime.value = Date.now(); // Atualiza cache após login
+                return { success: true, redirect: result.data.redirect || '/' };
             }
             return result;
         } catch (error) {
@@ -60,8 +78,8 @@ export function useAuth() {
             const result = await authService.register(data);
             if (result.success) {
                 user.value = result.data.user;
-                await router.push(result.data.redirect || '/');
-                return { success: true };
+                lastCheckTime.value = Date.now(); // Atualiza cache após registro
+                return { success: true, redirect: result.data.redirect || '/' };
             }
             return result;
         } catch (error) {
@@ -82,11 +100,15 @@ export function useAuth() {
         try {
             await authService.logout();
             user.value = null;
-            await router.push('/login');
+            lastCheckTime.value = 0; // Limpa cache após logout
+            checkingPromise = null; // Limpa promise pendente
+            return { success: true };
         } catch (error) {
             // Mesmo com erro, limpar estado local
             user.value = null;
-            await router.push('/login');
+            lastCheckTime.value = 0;
+            checkingPromise = null;
+            return { success: true };
         } finally {
             loading.value = false;
         }

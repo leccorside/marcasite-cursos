@@ -1,48 +1,46 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
     <div class="px-6 py-4 flex items-center justify-between">
-      <!-- Left: Hamburger Menu (Mobile) -->
-      <button
-        @click="$emit('toggle-sidebar')"
-        class="lg:hidden text-gray-600 hover:text-gray-900 mr-4"
-        aria-label="Toggle menu"
-      >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
-
-      <!-- Left: Search -->
-      <div class="flex-1 max-w-md">
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="Buscar..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-          />
-          <svg
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+      <div class="flex items-center">
+        <!-- Left: Hamburger Menu (Mobile) -->
+        <button
+          @click="$emit('toggle-sidebar')"
+          class="lg:hidden text-gray-600 hover:text-gray-900 mr-4"
+          aria-label="Toggle menu"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
+        </button>
+
+        <!-- Search Icon (Mobile) / Search Input (Desktop) -->
+        <div class="relative flex items-center">
+          <button 
+            @click="showMobileSearch = !showMobileSearch"
+            class="md:hidden p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+
+          <!-- Desktop Search -->
+          <div class="hidden md:block relative w-64 lg:w-96">
+            <input
+              type="text"
+              placeholder="Buscar..."
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+            />
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
         </div>
       </div>
 
       <!-- Right: Notifications and User -->
       <div class="flex items-center gap-4">
+        <!-- ... resto do código igual ... -->
         <!-- Notifications -->
         <button class="relative text-gray-600 hover:text-gray-900">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,19 +115,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Mobile Search (Abaixo do Header) -->
+    <transition
+      enter-active-class="transition ease-out duration-200"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-150"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div v-if="showMobileSearch" class="md:hidden px-6 pb-4">
+        <div class="relative w-full">
+          <input
+            ref="mobileSearchInput"
+            type="text"
+            placeholder="O que você procura?"
+            class="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-gray-50 shadow-inner"
+            @blur="showMobileSearch = false"
+          />
+          <svg class="absolute left-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <button @click="showMobileSearch = false" class="absolute right-3 top-3 text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </transition>
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuth } from '@/composables/useAuth';
 
 defineEmits(['toggle-sidebar']);
 
+const router = useRouter();
 const auth = useAuth();
 const showUserMenu = ref(false);
+const showMobileSearch = ref(false);
 const notificationCount = ref(2);
 const userMenuRef = ref(null);
+const mobileSearchInput = ref(null);
+
+watch(showMobileSearch, (val) => {
+  if (val) {
+    nextTick(() => {
+      mobileSearchInput.value?.focus();
+    });
+  }
+});
 
 const userName = computed(() => {
   return auth.user.value?.name || auth.user.value?.aluno?.nome || 'Usuário';
@@ -142,12 +182,12 @@ const userEmail = computed(() => {
 const handleLogout = async () => {
   showUserMenu.value = false;
   await auth.logout();
+  await router.push('/login');
 };
 
 // Fechar menu ao clicar fora
 const handleClickOutside = (event) => {
   if (userMenuRef.value && !userMenuRef.value.contains(event.target)) {
-    // Verificar se o clique não foi no botão do menu
     const menuButton = event.target.closest('button[class*="rounded-full"]');
     if (!menuButton) {
       showUserMenu.value = false;

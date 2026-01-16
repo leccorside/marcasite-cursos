@@ -310,7 +310,9 @@ const handleRegister = async () => {
 
   const result = await register(dataToSend);
 
-  if (!result.success) {
+  if (result.success) {
+    await router.push(result.redirect);
+  } else {
     if (result.errors) {
       errors.value = result.errors;
     } else {

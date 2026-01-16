@@ -20,6 +20,15 @@ Route::prefix('api')->group(function () {
     Route::middleware(['auth'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'user']);
+
+        // Rotas de Cursos (apenas admin)
+        Route::middleware(['admin'])->prefix('cursos')->group(function () {
+            Route::get('/', [\App\Http\Controllers\CursoController::class, 'index']);
+            Route::get('/{curso}', [\App\Http\Controllers\CursoController::class, 'show']);
+            Route::post('/', [\App\Http\Controllers\CursoController::class, 'store']);
+            Route::put('/{curso}', [\App\Http\Controllers\CursoController::class, 'update']);
+            Route::delete('/{curso}', [\App\Http\Controllers\CursoController::class, 'destroy']);
+        });
     });
 
     // Rota para verificar autenticação (sem middleware, retorna null se não autenticado)

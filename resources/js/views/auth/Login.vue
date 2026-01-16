@@ -102,7 +102,9 @@ const handleLogin = async () => {
 
   const result = await login(form.value.email, form.value.password);
 
-  if (!result.success) {
+  if (result.success) {
+    await router.push(result.redirect);
+  } else {
     if (result.errors) {
       errors.value = result.errors;
     } else {

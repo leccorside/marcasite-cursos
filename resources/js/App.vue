@@ -1,7 +1,8 @@
 <template>
+  <Loading />
   <router-view />
 </template>
 
 <script setup>
-// Componente raiz da aplicação
+import Loading from '@/components/Loading.vue';
 </script>
