@@ -65,9 +65,10 @@
             <span class="text-gray-700 font-medium">{{ userName }}</span>
             <button
               @click.stop="showUserMenu = !showUserMenu"
-              class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-pointer"
+              class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer overflow-hidden border border-gray-200"
             >
-              <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <img v-if="auth.user.value?.foto_perfil" :src="`/storage/${auth.user.value.foto_perfil}`" class="w-full h-full object-cover" />
+              <svg v-else class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"

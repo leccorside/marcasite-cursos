@@ -214,21 +214,31 @@ const irParaPagina = (p) => {
 
 const isInscricoesAbertas = (curso) => {
   if (Number(curso.vagas_disponiveis) <= 0) return false;
-  if (!curso.data_fim_inscricoes) return true;
-
+  
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  // Garantir que pegamos apenas a parte da data YYYY-MM-DD
-  const dataString = typeof curso.data_fim_inscricoes === 'string' 
-    ? curso.data_fim_inscricoes.split('T')[0] 
-    : curso.data_fim_inscricoes;
-    
-  // Criar data de fim de forma segura (ano, mês-0-indexado, dia, hora, min, seg)
-  const [year, month, day] = dataString.split('-').map(Number);
-  const dataFim = new Date(year, month - 1, day, 23, 59, 59);
+  // Verificar Data de Início
+  if (curso.data_inicio_inscricoes) {
+    const dataInicioStr = typeof curso.data_inicio_inscricoes === 'string' 
+      ? curso.data_inicio_inscricoes.split('T')[0] 
+      : curso.data_inicio_inscricoes;
+    const [iYear, iMonth, iDay] = dataInicioStr.split('-').map(Number);
+    const dataInicio = new Date(iYear, iMonth - 1, iDay, 0, 0, 0);
+    if (hoje < dataInicio) return false;
+  }
+
+  // Verificar Data de Fim
+  if (curso.data_fim_inscricoes) {
+    const dataFimStr = typeof curso.data_fim_inscricoes === 'string' 
+      ? curso.data_fim_inscricoes.split('T')[0] 
+      : curso.data_fim_inscricoes;
+    const [fYear, fMonth, fDay] = dataFimStr.split('-').map(Number);
+    const dataFim = new Date(fYear, fMonth - 1, fDay, 23, 59, 59);
+    if (hoje > dataFim) return false;
+  }
   
-  return hoje <= dataFim;
+  return true;
 };
 
 const formatCurrency = (value) => {

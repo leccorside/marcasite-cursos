@@ -5,8 +5,9 @@
       <div class="flex justify-between items-center w-full">
         <h1 class="text-2xl md:text-3xl font-black text-black uppercase tracking-tighter">Usuários</h1>
         
-        <!-- Botão Novo (Mockup por enquanto) -->
+        <!-- Botão Novo -->
         <button
+          @click="abrirModalCriar"
           class="bg-[#333] text-white px-5 md:px-8 py-2.5 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap text-sm md:text-base shadow-sm"
         >
           Novo usuário
@@ -52,7 +53,17 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr v-for="usuario in usuarios" :key="usuario.id" class="hover:bg-gray-50/50 transition-colors">
-            <td class="p-4 md:p-6 text-xs md:text-sm font-bold text-gray-900 border-r border-gray-50">{{ usuario.name }}</td>
+            <td class="p-4 md:p-6 text-xs md:text-sm font-bold text-gray-900 border-r border-gray-50">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
+                  <img v-if="usuario.foto_perfil" :src="`/storage/${usuario.foto_perfil}`" class="w-full h-full object-cover" />
+                  <svg v-else class="w-full h-full text-gray-300 p-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                </div>
+                <span>{{ usuario.name }}</span>
+              </div>
+            </td>
             <td class="p-4 md:p-6 text-xs md:text-sm font-medium text-gray-500 border-r border-gray-50">{{ usuario.email }}</td>
             <td class="p-4 md:p-6 text-xs md:text-sm font-medium text-gray-900 text-center border-r border-gray-50">
               <span :class="[
@@ -65,9 +76,22 @@
             <td class="p-4 md:p-6 text-xs md:text-sm font-medium text-gray-900 text-center border-r border-gray-50">{{ usuario.ativo ? 'Sim' : 'Não' }}</td>
             <td class="p-4 md:p-6 text-right">
               <div class="flex justify-end gap-4">
-                <button class="text-black hover:opacity-60 transition-opacity" title="Editar">
+                <button 
+                  @click="abrirModalEditar(usuario)"
+                  class="text-black hover:opacity-60 transition-opacity" 
+                  title="Editar"
+                >
                   <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button 
+                  @click="confirmarExclusao(usuario)"
+                  class="text-red-600 hover:opacity-60 transition-opacity" 
+                  title="Excluir"
+                >
+                  <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
@@ -91,12 +115,30 @@
         {{ page }}
       </button>
     </div>
+
+    <!-- Modais -->
+    <ModalUsuario
+      v-if="mostrarModal"
+      :usuario="usuarioEditando"
+      @fechar="fecharModal"
+      @salvar="salvarUsuario"
+    />
+
+    <ModalConfirmacao
+      v-if="usuarioExcluir"
+      titulo="Excluir Usuário"
+      :mensagem="`Deseja mesmo deletar este usuário? (${usuarioExcluir.name}). Esta ação não pode ser desfeita.`"
+      @cancelar="usuarioExcluir = null"
+      @confirmar="excluirUsuario"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { userService } from '@/services/user';
+import ModalUsuario from '@/components/admin/ModalUsuario.vue';
+import ModalConfirmacao from '@/components/admin/ModalConfirmacao.vue';
 
 const usuarios = ref([]);
 const loading = ref(true);
@@ -106,6 +148,10 @@ const total = ref(0);
 const perPage = 9;
 const totalPages = ref(1);
 let searchTimeout = null;
+
+const mostrarModal = ref(false);
+const usuarioEditando = ref(null);
+const usuarioExcluir = ref(null);
 
 const carregarUsuarios = async () => {
   loading.value = true;
@@ -123,6 +169,51 @@ const carregarUsuarios = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+const abrirModalCriar = () => {
+  usuarioEditando.value = null;
+  mostrarModal.value = true;
+};
+
+const abrirModalEditar = (usuario) => {
+  usuarioEditando.value = usuario;
+  mostrarModal.value = true;
+};
+
+const fecharModal = () => {
+  mostrarModal.value = false;
+  usuarioEditando.value = null;
+};
+
+const salvarUsuario = async (dados, callback) => {
+  const result = usuarioEditando.value 
+    ? await userService.atualizar(usuarioEditando.value.id, dados) 
+    : await userService.criar(dados);
+    
+  if (result.success) {
+    fecharModal();
+    carregarUsuarios();
+    if (callback) callback({});
+  } else if (callback) {
+    callback(result.errors || {});
+  }
+};
+
+const confirmarExclusao = (usuario) => {
+  usuarioExcluir.value = usuario;
+};
+
+const excluirUsuario = async () => {
+  if (!usuarioExcluir.value) return;
+  const result = await userService.excluir(usuarioExcluir.value.id);
+  if (result.success) {
+    // Poderia mostrar uma mensagem de sucesso aqui
+  } else {
+    alert(result.message);
+  }
+  usuarioExcluir.value = null;
+  carregarUsuarios();
 };
 
 const debounceSearch = () => {

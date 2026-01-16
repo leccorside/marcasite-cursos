@@ -40,6 +40,9 @@ Route::prefix('api')->group(function () {
 
         // Usuários (apenas admin)
         Route::get('/usuarios', [UserController::class, 'index']);
+        Route::post('/usuarios', [UserController::class, 'store']);
+        Route::put('/usuarios/{usuario}', [UserController::class, 'update']);
+        Route::delete('/usuarios/{usuario}', [UserController::class, 'destroy']);
     });
 
     // Rota para verificar autenticação (sem middleware, retorna null se não autenticado)

@@ -92,9 +92,23 @@ class InscricaoController extends Controller
 
         // Verificar se as inscrições estão abertas (vagas e data)
         if (!$curso->inscricoesAbertas()) {
+            \Log::warning("Inscrição bloqueada: curso {$curso->id} não está com inscrições abertas.", [
+                'ativo' => $curso->ativo,
+                'vagas_disponiveis' => $curso->vagas_disponiveis,
+                'data_inicio' => $curso->data_inicio_inscricoes,
+                'data_fim' => $curso->data_fim_inscricoes,
+                'hoje' => now()->toDateTimeString()
+            ]);
             if (!$curso->temVagas()) {
                 return response()->json(['message' => 'Desculpe, não há mais vagas disponíveis para este curso.'], 422);
             }
+            
+            $hoje = now()->startOfDay();
+            $inicio = \Carbon\Carbon::parse($curso->data_inicio_inscricoes)->startOfDay();
+            if ($hoje->lessThan($inicio)) {
+                return response()->json(['message' => 'As inscrições para este curso ainda não começaram.'], 422);
+            }
+
             return response()->json(['message' => 'O prazo para inscrições neste curso já se encerrou.'], 422);
         }
 

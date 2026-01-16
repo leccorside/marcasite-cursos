@@ -102,10 +102,15 @@ class Curso extends Model
      */
     public function inscricoesAbertas(): bool
     {
-        $hoje = now()->format('Y-m-d');
+        $hoje = now()->startOfDay();
+        
+        // Garantir que as datas sejam tratadas como Carbon e ignorar a hora para a comparação
+        $inicio = \Carbon\Carbon::parse($this->data_inicio_inscricoes)->startOfDay();
+        $fim = \Carbon\Carbon::parse($this->data_fim_inscricoes)->startOfDay();
+
         return $this->ativo 
-            && $this->data_inicio_inscricoes <= $hoje
-            && $this->data_fim_inscricoes >= $hoje
+            && $hoje->greaterThanOrEqualTo($inicio)
+            && $hoje->lessThanOrEqualTo($fim)
             && $this->temVagas();
     }
 
